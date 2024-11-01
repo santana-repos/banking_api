@@ -1,0 +1,509 @@
+openapi: 3.0.3
+info:
+  title: Banking System API
+  version: 1.3.0
+  description: API for managing banking system entities including Persons, Organizations, Bank Accounts, and Account Roles.
+
+paths:
+  /persons:
+    get:
+      summary: List all persons
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of results to return
+          schema:
+            type: integer
+            example: 10
+        - name: offset
+          in: query
+          description: Offset to start returning results from
+          schema:
+            type: integer
+            example: 0
+      responses:
+        '200':
+          description: A list of persons
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  schema: '#/components/schemas/Person'
+        '400':
+          description: Invalid request parameters
+    post:
+      summary: Create a new person
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: '#/components/schemas/Person'
+      responses:
+        '201':
+          description: Person created
+          content:
+            application/json:
+              schema: '#/components/schemas/Person'
+        '400':
+          description: Invalid request payload
+
+  /organizations:
+    get:
+      summary: List all organizations
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of results to return
+          schema:
+            type: integer
+            example: 10
+        - name: offset
+          in: query
+          description: Offset to start returning results from
+          schema:
+            type: integer
+            example: 0
+      responses:
+        '200':
+          description: A list of organizations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  schema: '#/components/schemas/Organization'
+        '400':
+          description: Invalid request parameters
+    post:
+      summary: Create a new organization
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: '#/components/schemas/Organization'
+      responses:
+        '201':
+          description: Organization created
+          content:
+            application/json:
+              schema: '#/components/schemas/Organization'
+        '400':
+          description: Invalid request payload
+
+  /accounts:
+    get:
+      summary: List all bank accounts
+      parameters:
+        - name: accountType
+          in: query
+          description: Filter accounts by type (e.g., checking, savings)
+          schema:
+            type: string
+            enum:
+              - checking
+              - savings
+              - business
+          example: checking
+        - name: limit
+          in: query
+          description: Maximum number of results to return
+          schema:
+            type: integer
+            example: 10
+        - name: offset
+          in: query
+          description: Offset to start returning results from
+          schema:
+            type: integer
+            example: 0
+      responses:
+        '200':
+          description: A list of bank accounts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  schema: '#/components/schemas/BankAccount'
+        '400':
+          description: Invalid request parameters
+    post:
+      summary: Create a new bank account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: '#/components/schemas/BankAccount'
+      responses:
+        '201':
+          description: Bank account created
+          content:
+            application/json:
+              schema: '#/components/schemas/BankAccount'
+        '400':
+          description: Invalid request payload
+
+  /accounts/{accountId}:
+    get:
+      summary: Get details of a specific bank account
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Bank account details
+          content:
+            application/json:
+              schema: '#/components/schemas/BankAccount'
+        '400':
+          description: Invalid request parameters
+        '404':
+          description: Account not found
+    patch:
+      summary: Update specific fields in a bank account
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                balance:
+                  type: number
+                  format: float
+                  example: 5200.75
+                status:
+                  type: string
+                  enum:
+                    - active
+                    - inactive
+                    - closed
+                  example: "active"
+      responses:
+        '200':
+          description: Bank account updated successfully
+          content:
+            application/json:
+              schema: '#/components/schemas/BankAccount'
+        '400':
+          description: Invalid request payload
+        '404':
+          description: Account not found
+
+  /accounts/{accountId}/roles:
+    get:
+      summary: List all roles for a bank account
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: entityType
+          in: query
+          description: Filter roles by entity type (e.g., person or organization)
+          schema:
+            type: string
+            enum:
+              - person
+              - organization
+      responses:
+        '200':
+          description: A list of roles for the bank account
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  schema: '#/components/schemas/AccountRole'
+        '400':
+          description: Invalid request parameters
+    post:
+      summary: Assign a new role to a bank account
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: '#/components/schemas/AccountRole'
+      responses:
+        '201':
+          description: Role assigned to bank account
+          content:
+            application/json:
+              schema: '#/components/schemas/AccountRole'
+        '400':
+          description: Invalid request payload
+        '409':
+          description: Conflict - Role already exists for this entity and account.
+
+  /accounts/{accountId}/roles/history:
+    get:
+      summary: List the history of roles for a bank account
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: A history of roles for the bank account
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  schema: '#/components/schemas/AccountRoleHistory'
+        '400':
+          description: Invalid request parameters
+
+  /accounts/{accountId}/roles/{roleId}:
+    get:
+      summary: Get details of a specific role by roleId
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: roleId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Details of the specified role
+          content:
+            application/json:
+              schema: '#/components/schemas/AccountRole'
+        '400':
+          description: Invalid request parameters
+        '404':
+          description: Role or account not found
+    patch:
+      summary: Update an existing role for a bank account
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: roleId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: '#/components/schemas/AccountRole'
+      responses:
+        '200':
+          description: Role updated successfully
+          content:
+            application/json:
+              schema: '#/components/schemas/AccountRole'
+        '400':
+          description: Invalid request payload
+        '404':
+          description: Role or account not found
+    delete:
+      summary: Remove a role from a bank account
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: roleId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Role removed successfully
+        '404':
+          description: Role or account not found
+
+  /entities/{entityId}/roles:
+    get:
+      summary: List all roles for a person or organization
+      parameters:
+        - name: entityId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: A list of roles for the entity
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  schema: '#/components/schemas/AccountRole'
+        '400':
+          description: Invalid request parameters
+
+components:
+  schemas:
+    Person:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        name:
+          type: string
+          example: "John Doe"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Organization:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "789e1234-a567-b8c9-1234-56781234e000"
+        name:
+          type: string
+          example: "Acme Corp"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    BankAccount:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        accountNumber:
+          type: string
+          example: "1234567890123456"
+        accountType:
+          type: string
+          enum:
+            - checking
+            - savings
+            - business
+        balance:
+          type: number
+          format: float
+        status:
+          type: string
+          enum:
+            - active
+            - inactive
+            - closed
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    AccountRole:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        accountId:
+          type: string
+          format: uuid
+        entityId:
+          type: string
+          format: uuid
+        roles:
+          type: array
+          items:
+            type: object
+            properties:
+              roleType:
+                type: string
+                enum:
+                  - owner
+                  - signer
+                  - beneficiary
+              effectiveDate:
+                type: string
+                format: date
+              endDate:
+                type: string
+                format: date
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    AccountRoleHistory:
+      type: object
+      properties:
+        accountId:
+          type: string
+          format: uuid
+        entityId:
+          type: string
+          format: uuid
+        roleType:
+          type: string
+          enum:
+            - owner
+            - signer
+            - beneficiary
+        effectiveDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
