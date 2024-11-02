@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Banking System API
-  version: 2.0.0
+  version: 2.1.1
   description: API for managing banking accounts, persons and organizations.
   contact:
     email: info@banking.com
@@ -16,6 +16,14 @@ servers:
         default: sandbox-fake.openbanking.com
       basePath:
         default: /banking-system-api/v1
+tags:
+  - name: persons
+    description: Persons group of operations
+  - name: organizations
+    description: Organizations group of operations
+  - name: bank-accounts
+    description: Bank Accounts group of operations
+          
 paths:
   /persons:
     post:
@@ -24,6 +32,8 @@ paths:
         - OAuth2:
           - write_banking_persons
       summary: Create a new person
+      tags:
+      - persons
       requestBody:
         content:
           application/json:
@@ -50,6 +60,8 @@ paths:
           - read_banking
           - read_banking_persons
       summary: Get a specific person
+      tags:
+      - persons
       parameters:
         - $ref: '#/components/parameters/PersonId'
       responses:
@@ -69,12 +81,10 @@ paths:
         - OAuth2:
           - write_banking_persons
       summary: Update a person
+      tags:
+      - persons
       parameters:
-        - in: path
-          name: personId
-          schema:
-            type: integer
-          required: true
+        - $ref:  '#/components/parameters/PersonId'
       requestBody:
         content:
           application/json:
@@ -94,7 +104,13 @@ paths:
         '500':
           $ref: '#/components/responses/500'
     delete:
+      operationId: deletePerson
+      security:
+        - OAuth2:
+          - write_banking_persons
       summary: Delete a person
+      tags:
+      - persons
       parameters:
         - $ref: '#/components/parameters/PersonId'
       responses:
@@ -108,11 +124,13 @@ paths:
           $ref: '#/components/responses/500'
   /organizations:
     post:
-      operationId: CreateOrganization
+      operationId: createOrganization
       security:
         - OAuth2:
           - write_banking_organiations
       summary: Create a new organization
+      tags:
+      - operations
       requestBody:
         content:
           application/json:
@@ -139,6 +157,8 @@ paths:
           - read_banking
           - read_banking_organiations
       summary: Get a specific organization
+      tags:
+      - operations
       parameters:
         - $ref: '#/components/parameters/OrganizationId'
       responses:
@@ -152,8 +172,14 @@ paths:
           $ref: '#/components/responses/404_no_body'
         '500':
           $ref: '#/components/responses/500'
-    put:
+    patch:
+      operationId: updateOrganization
+      security:
+        - OAuth2:
+          - write_banking_organiations
       summary: Update an organization
+      tags:
+      - operations
       parameters:
         - $ref: '#/components/parameters/OrganizationId'
       requestBody:
@@ -175,7 +201,13 @@ paths:
         '500':
           $ref: '#/components/responses/500'
     delete:
+      operationId: deleteOrganization
+      security:
+        - OAuth2:
+          - write_banking_organiations
       summary: Delete an organization
+      tags:
+      - operations
       parameters:
         - $ref: '#/components/parameters/OrganizationId'
       responses:
@@ -187,7 +219,13 @@ paths:
           $ref: '#/components/responses/500'
   /bank-accounts:
     post:
+      operationId: createBankAccount
+      security:
+        - OAuth2:
+          - write_banking_accounts
       summary: Create a new bank account
+      tags:
+      - bank-accounts
       requestBody:
         content:
           application/json:
@@ -196,42 +234,27 @@ paths:
       responses:
         '201':
           description: Bank account created successfully
-          content:
-            application/json:
+          headers:
+            location:
               schema:
-                $ref: '#/components/schemas/BankAccount'
+                type: string
+                format: url
+              example:  /bank-accounts/b67e71ff-3dab-4b60-8452-078775f3d783
         '404':
           $ref: '#/components/responses/404_no_body'
         '500':
           $ref: '#/components/responses/500'
+  /bank-accounts/{accountId}:
     get:
-      operationId: retrieveAccountById
+      operationId: retrieveBankAccountById
       security:
         - OAuth2:
           - read_banking_accounts
-      summary: Get all bank accounts
-      responses:
-        '200':
-          description: List of bank accounts
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/BankAccount'
-        '404':
-          $ref: '#/components/responses/404_no_body'
-        '500':
-          $ref: '#/components/responses/500'
-  /bank-accounts/{AccountId}:
-    get:
       summary: Get a specific bank account
+      tags:
+      - bank-accounts
       parameters:
-        - in: path
-          name: AccountId
-          schema:
-            type: integer
-          required: true
+        - $ref:  '#/components/parameters/AccountId'
       responses:
         '200':
           description: Bank account found
@@ -243,14 +266,16 @@ paths:
           description: Bank account not found
         '500':
           description: Internal server error
-    put:
+    patch:
+      operationId: updateBankAccount
+      security:
+        - OAuth2:
+          - write_banking_accounts
       summary: Update a bank account
+      tags:
+      - bank-accounts
       parameters:
-        - in: path
-          name: AccountId
-          schema:
-            type: integer
-          required: true
+        - $ref:  '#/components/parameters/AccountId'
       requestBody:
         content:
           application/json:
@@ -270,13 +295,15 @@ paths:
         '500':
           description: Internal server error
     delete:
+      operationId: deleteBankAccount
+      security:
+        - OAuth2:
+          - write_banking_accounts
       summary: Delete a bank account
+      tags:
+      - bank-accounts
       parameters:
-        - in: path
-          name: AccountId
-          schema:
-            type: integer
-          required: true
+        - $ref:  '#/components/parameters/AccountId'
       responses:
         '204':
           description: Bank account deleted successfully
@@ -284,20 +311,22 @@ paths:
           description: Bank account not found
         '500':
           description: Internal server error
-  /bank-accounts/{AccountId}/account-holders:
+  /bank-accounts/{accountId}/account-holders:
     post:
+      operationId: addAccountHolder
+      security:
+        - OAuth2:
+          - write_banking_accounts
       summary: Add a new account holder to a bank account
+      tags:
+      - bank-accounts
       parameters:
-        - in: path
-          name: AccountId
-          schema:
-            type: integer
-          required: true
+        - $ref:  '#/components/parameters/AccountId'
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AccountHolder'
+              $ref: '#/components/schemas/NewAccountHolder'
       responses:
         '201':
           description: Account holder added successfully
@@ -312,13 +341,13 @@ paths:
         '500':
           description: Internal server error
     get:
+      operationId: retrieveAccountHoldersByAccountId
+      security:
+        - OAuth2:
+          - read_banking_accounts
       summary: Get all account holders of a bank account
       parameters:
-        - in: path
-          name: AccountId
-          schema:
-            type: integer
-          required: true
+        - $ref:  '#/components/parameters/AccountId'
       responses:
         '200':
           description: List of account holders
@@ -332,20 +361,18 @@ paths:
           description: Bank account not found
         '500':
           description: Internal server error
-  /bank-accounts/{AccountId}/account-holders/{AccountHolderId}:
+  /bank-accounts/{accountId}/account-holders/{accountHolderId}:
     get:
+      operationId: retrieveAccountHolderById
+      security:
+        - OAuth2:
+          - read_banking_accounts
       summary: Get a specific account holder of a bank account
+      tags:
+      - bank-accounts
       parameters:
-        - in: path
-          name: AccountId
-          schema:
-            type: integer
-          required: true
-        - in: path
-          name: AccountHolderId
-          schema:
-            type: integer
-          required: true
+        - $ref:  '#/components/parameters/AccountId'
+        - $ref:  '#/components/parameters/AccountHolderId'
       responses:
         '200':
           description: Account holder found
@@ -357,19 +384,15 @@ paths:
           description: Account holder or bank account not found
         '500':
           description: Internal server error
-    put:
+    patch:
+      operationId: updateAccountHolder
+      security:
+        - OAuth2:
+          - write_banking_accounts
       summary: Update an account holder of a bank account
       parameters:
-        - in: path
-          name: AccountId
-          schema:
-            type: integer
-          required: true
-        - in: path
-          name: AccountHolderId
-          schema:
-            type: integer
-          required: true
+        - $ref:  '#/components/parameters/AccountId'
+        - $ref:  '#/components/parameters/AccountHolderId'
       requestBody:
         content:
           application/json:
@@ -389,18 +412,14 @@ paths:
         '500':
           description: Internal server error
     delete:
+      operationId: deleteAccountHolder
+      security:
+        - OAuth2:
+          - write_banking_accounts
       summary: Delete an account holder from a bank account
       parameters:
-        - in: path
-          name: AccountId
-          schema:
-            type: integer
-          required: true
-        - in: path
-          name: AccountHolderId
-          schema:
-            type: integer
-          required: true
+        - $ref:  '#/components/parameters/AccountId'
+        - $ref:  '#/components/parameters/AccountHolderId'
       responses:
         '204':
           description: Account holder deleted successfully
@@ -454,19 +473,33 @@ components:
             error: 'Internal server Error'
   parameters:
     PersonId:
-      in: path
       name: personId
-      schema:
-        type: string
-      required: true
-      example: PABC123
-    OrganizationId:
       in: path
-      name: organizationId
+      required: true
       schema:
         type: string
+        example: PABC123
+    OrganizationId:
+      name: organizationId
+      in: path
       required: true
-      example: PYZC877
+      schema:
+        type: string
+        example: PYZC877
+    AccountId:
+      name: accountId
+      in: path
+      required: true
+      schema:
+        type: string
+        example: b67e71ff-3dab-4b60-8452-078775f3d783
+    AccountHolderId:
+      name: accountHolderId
+      in: path
+      required: true
+      schema:
+        type: string
+        example: de6b5e4d-db8f-416f-bb3d-b3bb4a8758cd
   schemas:
     NewPerson:
       type: object
@@ -486,14 +519,14 @@ components:
           example: 1980-01-01
     Person:
       allOf:
-        - $ref: '#/components/schemas/Person'
         - type: object
           properties:
             personId:
               description: A unique and immutable identifier used to identify the person resource.
               type: string
               example: PABC123
-    Organization:
+        - $ref: '#/components/schemas/NewPerson'              
+    NewOrganization:
       type: object
       properties:
         name:
@@ -504,15 +537,15 @@ components:
           type: string
           description: Registration number of the organization
           example: 123456789
-    NewOrganization:
+    Organization:  
       allOf:
-        - $ref: '#/components/schemas/Organization'
         - type: object
           properties:
             personId:
               description: A unique and immutable identifier used to identify the organization resource.
               type: string
               example: PYZC877
+        - $ref: '#/components/schemas/NewOrganization'          
     BankAccount:
       type: object
       properties:
@@ -533,7 +566,7 @@ components:
           format: float
           description: Balance of the bank account
           example: 1000.00
-    AccountHolder:
+    NewAccountHolder:
       type: object
       properties:
         accountId:
@@ -561,10 +594,19 @@ components:
           format: date
           description: Effective date of the account holder's role
           example: 2023-04-01
+    AccountHolder:
+      allOf:
+      - type: object
+        properties:
+          accountHolderId:
+            type: string
+            description: account holder ID
+            example: de6b5e4d-db8f-416f-bb3d-b3bb4a8758cd
+      - $ref: '#/components/schemas/NewAccountHolder'
     Error:
       type: object
       properties:
-        error: 
+        error:
           type: string
   securitySchemes:
     OAuth2:
