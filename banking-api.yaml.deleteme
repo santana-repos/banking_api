@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Banking System API
-  version: 1.3.0
+  version: 1.4.4
   description: API for managing banking system entities including Persons, Organizations, Bank Accounts, and Account Roles.
 
 paths:
@@ -29,7 +29,7 @@ paths:
               schema:
                 type: array
                 items:
-                  schema: '#/components/schemas/Person'
+                  $ref: '#/components/schemas/Person'
         '400':
           description: Invalid request parameters
     post:
@@ -38,13 +38,15 @@ paths:
         required: true
         content:
           application/json:
-            schema: '#/components/schemas/Person'
+            schema: 
+              $ref: '#/components/schemas/Person'
       responses:
         '201':
           description: Person created
           content:
             application/json:
-              schema: '#/components/schemas/Person'
+              schema: 
+                $ref: '#/components/schemas/Person'
         '400':
           description: Invalid request payload
 
@@ -72,7 +74,7 @@ paths:
               schema:
                 type: array
                 items:
-                  schema: '#/components/schemas/Organization'
+                  $ref: '#/components/schemas/Organization'
         '400':
           description: Invalid request parameters
     post:
@@ -81,13 +83,15 @@ paths:
         required: true
         content:
           application/json:
-            schema: '#/components/schemas/Organization'
+            schema: 
+              $ref: '#/components/schemas/Organization'
       responses:
         '201':
           description: Organization created
           content:
             application/json:
-              schema: '#/components/schemas/Organization'
+              schema: 
+                $ref: '#/components/schemas/Organization'
         '400':
           description: Invalid request payload
 
@@ -125,7 +129,7 @@ paths:
               schema:
                 type: array
                 items:
-                  schema: '#/components/schemas/BankAccount'
+                  $ref: '#/components/schemas/BankAccount'
         '400':
           description: Invalid request parameters
     post:
@@ -134,13 +138,15 @@ paths:
         required: true
         content:
           application/json:
-            schema: '#/components/schemas/BankAccount'
+            schema: 
+              $ref: '#/components/schemas/BankAccount'
       responses:
         '201':
           description: Bank account created
           content:
             application/json:
-              schema: '#/components/schemas/BankAccount'
+              schema: 
+                $ref: '#/components/schemas/BankAccount'
         '400':
           description: Invalid request payload
 
@@ -159,7 +165,8 @@ paths:
           description: Bank account details
           content:
             application/json:
-              schema: '#/components/schemas/BankAccount'
+              schema: 
+                $ref: '#/components/schemas/BankAccount'
         '400':
           description: Invalid request parameters
         '404':
@@ -196,7 +203,8 @@ paths:
           description: Bank account updated successfully
           content:
             application/json:
-              schema: '#/components/schemas/BankAccount'
+              schema: 
+                $ref: '#/components/schemas/BankAccount'
         '400':
           description: Invalid request payload
         '404':
@@ -228,11 +236,11 @@ paths:
               schema:
                 type: array
                 items:
-                  schema: '#/components/schemas/AccountRole'
+                  $ref: '#/components/schemas/AccountRole'
         '400':
           description: Invalid request parameters
     post:
-      summary: Assign a new role to a bank account
+      summary: Assign multiple roles with different effective dates to a bank account
       parameters:
         - name: accountId
           in: path
@@ -244,13 +252,39 @@ paths:
         required: true
         content:
           application/json:
-            schema: '#/components/schemas/AccountRole'
+            schema: 
+              type: object
+              properties:
+                entityId:
+                  type: string
+                  format: uuid
+                  description: "ID of the person or organization"
+                roles:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      roleType:
+                        type: string
+                        enum:
+                          - owner
+                          - signer
+                          - beneficiary
+                      effectiveDate:
+                        type: string
+                        format: date
+                        example: "2023-01-01"
+                      endDate:
+                        type: string
+                        format: date
+                        example: "2023-12-31"
       responses:
         '201':
-          description: Role assigned to bank account
+          description: Roles assigned to bank account
           content:
             application/json:
-              schema: '#/components/schemas/AccountRole'
+              schema: 
+                $ref: '#/components/schemas/AccountRole'
         '400':
           description: Invalid request payload
         '409':
@@ -274,7 +308,7 @@ paths:
               schema:
                 type: array
                 items:
-                  schema: '#/components/schemas/AccountRoleHistory'
+                  $ref: '#/components/schemas/AccountRoleHistory'
         '400':
           description: Invalid request parameters
 
@@ -299,7 +333,8 @@ paths:
           description: Details of the specified role
           content:
             application/json:
-              schema: '#/components/schemas/AccountRole'
+              schema: 
+                $ref: '#/components/schemas/AccountRole'
         '400':
           description: Invalid request parameters
         '404':
@@ -323,13 +358,15 @@ paths:
         required: true
         content:
           application/json:
-            schema: '#/components/schemas/AccountRole'
+            schema: 
+              $ref: '#/components/schemas/AccountRole'
       responses:
         '200':
           description: Role updated successfully
           content:
             application/json:
-              schema: '#/components/schemas/AccountRole'
+              schema: 
+                $ref: '#/components/schemas/AccountRole'
         '400':
           description: Invalid request payload
         '404':
@@ -355,11 +392,11 @@ paths:
         '404':
           description: Role or account not found
 
-  /entities/{entityId}/roles:
+  /accounts/{accountId}/associations:
     get:
-      summary: List all roles for a person or organization
+      summary: List all associations for a bank account
       parameters:
-        - name: entityId
+        - name: accountId
           in: path
           required: true
           schema:
@@ -367,16 +404,118 @@ paths:
             format: uuid
       responses:
         '200':
-          description: A list of roles for the entity
+          description: A list of account associations
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  schema: '#/components/schemas/AccountRole'
+                  $ref: '#/components/schemas/AccountAssociation'
         '400':
           description: Invalid request parameters
-
+    post:
+      summary: Create a new association with multiple roles for a bank account
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccountAssociation'
+      responses:
+        '201':
+          description: Association created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountAssociation'
+        '400':
+          description: Invalid request payload
+        '409':
+          description: Conflict - Association already exists for this entity and account.
+    patch:
+      summary: Update a specific role for an association in a bank account
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: associationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: roleType
+          in: path
+          required: true
+          schema:
+            type: string
+            enum:
+              - owner
+              - signer
+              - beneficiary
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                effectiveDate:
+                  type: string
+                  format: date
+                endDate:
+                  type: string
+                  format: date
+      responses:
+        '200':
+          description: Role updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountAssociation'
+        '400':
+          description: Invalid request payload
+        '404':
+          description: Association or role not found
+    delete:
+      summary: Remove a specific role from an association in a bank account
+      parameters:
+        - name: accountId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: associationId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: roleType
+          in: path
+          required: true
+          schema:
+            type: string
+            enum:
+              - owner
+              - signer
+              - beneficiary
+      responses:
+        '204':
+          description: Role removed successfully
+        '404':
+          description: Association or role not found
 components:
   schemas:
     Person:
@@ -456,23 +595,12 @@ components:
         entityId:
           type: string
           format: uuid
-        roles:
-          type: array
-          items:
-            type: object
-            properties:
-              roleType:
-                type: string
-                enum:
-                  - owner
-                  - signer
-                  - beneficiary
-              effectiveDate:
-                type: string
-                format: date
-              endDate:
-                type: string
-                format: date
+        roleType:
+          type: string
+          enum:
+            - owner
+            - signer
+            - beneficiary
         createdAt:
           type: string
           format: date-time
@@ -501,6 +629,44 @@ components:
         endDate:
           type: string
           format: date
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    AccountAssociation:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "223e4567-e89b-12d3-a456-426614174111"
+        accountId:
+          type: string
+          format: uuid
+        entityId:
+          type: string
+          format: uuid
+        roles:
+          type: array
+          items:
+            type: object
+            properties:
+              roleType:
+                type: string
+                enum:
+                  - owner
+                  - signer
+                  - beneficiary
+              effectiveDate:
+                type: string
+                format: date
+                example: "2023-01-01"
+              endDate:
+                type: string
+                format: date
+                example: "2023-12-31"
         createdAt:
           type: string
           format: date-time

@@ -1,0 +1,582 @@
+openapi: 3.0.3
+info:
+  title: Banking System API
+  version: 2.0.0
+  description: API for managing banking accounts, persons and organizations.
+  contact:
+    email: info@banking.com
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+servers:
+  - url: https://sandbox-fake.openbanking.com/sandbox/banking-system-api/v1
+    description: SANDBOX
+    variables:
+      host:
+        default: sandbox-fake.openbanking.com
+      basePath:
+        default: /banking-system-api/v1
+paths:
+  /persons:
+    post:
+      operationId: createPerson
+      security:
+        - OAuth2:
+          - write_banking_persons
+      summary: Create a new person
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewPerson'
+      responses:
+        '201':
+          description: Person created successfully
+          headers:
+            location:
+              schema:
+                type: string
+                format: url
+              example:  /persons/PABC123
+        '400':
+          $ref: "#/components/responses/400"
+        '500':
+          $ref: '#/components/responses/500'
+  /persons/{personId}:
+    get:
+      operationId: retrievePersonById
+      security:
+        - OAuth2:
+          - read_banking
+          - read_banking_persons
+      summary: Get a specific person
+      parameters:
+        - $ref: '#/components/parameters/PersonId'
+      responses:
+        '200':
+          description: Person found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Person'
+        '404':
+          $ref: '#/components/responses/404_no_body'
+        '500':
+          $ref: '#/components/responses/500'
+    patch:
+      operationId: updatePersonData
+      security:
+        - OAuth2:
+          - write_banking_persons
+      summary: Update a person
+      parameters:
+        - in: path
+          name: personId
+          schema:
+            type: integer
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Person'
+      responses:
+        '200':
+          description: Person updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Person'
+        '400':
+          $ref: '#/components/responses/400'
+        '404':
+          $ref: '#/components/responses/404_no_body'
+        '500':
+          $ref: '#/components/responses/500'
+    delete:
+      summary: Delete a person
+      parameters:
+        - $ref: '#/components/parameters/PersonId'
+      responses:
+        '204':
+          description: Person deleted successfully
+        '400':
+          $ref: '#/components/responses/400'
+        '404':
+          $ref: '#/components/responses/404_no_body'
+        '500':
+          $ref: '#/components/responses/500'
+  /organizations:
+    post:
+      operationId: CreateOrganization
+      security:
+        - OAuth2:
+          - write_banking_organiations
+      summary: Create a new organization
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewOrganization'
+      responses:
+        '201':
+          description: Organization created successfully
+          headers:
+            location:
+              schema:
+                type: string
+                format: url
+              example:  /organizations/PYZC877
+        '400':
+          $ref: '#/components/responses/400'
+        '500':
+          $ref: '#/components/responses/500'
+  /organizations/{organizationId}:
+    get:
+      operationId: retrieveOrganizationById
+      security:
+        - OAuth2:
+          - read_banking
+          - read_banking_organiations
+      summary: Get a specific organization
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      responses:
+        '200':
+          description: Organization found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+        '404':
+          $ref: '#/components/responses/404_no_body'
+        '500':
+          $ref: '#/components/responses/500'
+    put:
+      summary: Update an organization
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Organization'
+      responses:
+        '200':
+          description: Organization updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+        '400':
+          $ref: '#/components/responses/400'
+        '404':
+          $ref: '#/components/responses/404_no_body'
+        '500':
+          $ref: '#/components/responses/500'
+    delete:
+      summary: Delete an organization
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      responses:
+        '204':
+          description: Organization deleted successfully
+        '404':
+          $ref: '#/components/responses/404_no_body'
+        '500':
+          $ref: '#/components/responses/500'
+  /bank-accounts:
+    post:
+      summary: Create a new bank account
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BankAccount'
+      responses:
+        '201':
+          description: Bank account created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BankAccount'
+        '404':
+          $ref: '#/components/responses/404_no_body'
+        '500':
+          $ref: '#/components/responses/500'
+    get:
+      operationId: retrieveAccountById
+      security:
+        - OAuth2:
+          - read_banking_accounts
+      summary: Get all bank accounts
+      responses:
+        '200':
+          description: List of bank accounts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BankAccount'
+        '404':
+          $ref: '#/components/responses/404_no_body'
+        '500':
+          $ref: '#/components/responses/500'
+  /bank-accounts/{AccountId}:
+    get:
+      summary: Get a specific bank account
+      parameters:
+        - in: path
+          name: AccountId
+          schema:
+            type: integer
+          required: true
+      responses:
+        '200':
+          description: Bank account found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BankAccount'
+        '404':
+          description: Bank account not found
+        '500':
+          description: Internal server error
+    put:
+      summary: Update a bank account
+      parameters:
+        - in: path
+          name: AccountId
+          schema:
+            type: integer
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BankAccount'
+      responses:
+        '200':
+          description: Bank account updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BankAccount'
+        '400':
+          $ref: '#/components/responses/400'
+        '404':
+          description: Bank account not found
+        '500':
+          description: Internal server error
+    delete:
+      summary: Delete a bank account
+      parameters:
+        - in: path
+          name: AccountId
+          schema:
+            type: integer
+          required: true
+      responses:
+        '204':
+          description: Bank account deleted successfully
+        '404':
+          description: Bank account not found
+        '500':
+          description: Internal server error
+  /bank-accounts/{AccountId}/account-holders:
+    post:
+      summary: Add a new account holder to a bank account
+      parameters:
+        - in: path
+          name: AccountId
+          schema:
+            type: integer
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccountHolder'
+      responses:
+        '201':
+          description: Account holder added successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountHolder'
+        '400':
+          $ref: '#/components/responses/400'
+        '404':
+          description: Bank account not found
+        '500':
+          description: Internal server error
+    get:
+      summary: Get all account holders of a bank account
+      parameters:
+        - in: path
+          name: AccountId
+          schema:
+            type: integer
+          required: true
+      responses:
+        '200':
+          description: List of account holders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AccountHolder'
+        '404':
+          description: Bank account not found
+        '500':
+          description: Internal server error
+  /bank-accounts/{AccountId}/account-holders/{AccountHolderId}:
+    get:
+      summary: Get a specific account holder of a bank account
+      parameters:
+        - in: path
+          name: AccountId
+          schema:
+            type: integer
+          required: true
+        - in: path
+          name: AccountHolderId
+          schema:
+            type: integer
+          required: true
+      responses:
+        '200':
+          description: Account holder found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountHolder'
+        '404':
+          description: Account holder or bank account not found
+        '500':
+          description: Internal server error
+    put:
+      summary: Update an account holder of a bank account
+      parameters:
+        - in: path
+          name: AccountId
+          schema:
+            type: integer
+          required: true
+        - in: path
+          name: AccountHolderId
+          schema:
+            type: integer
+          required: true
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccountHolder'
+      responses:
+        '200':
+          description: Account holder updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountHolder'
+        '400':
+          $ref: '#/components/responses/400'
+        '404':
+          description: Account holder or bank account not found
+        '500':
+          description: Internal server error
+    delete:
+      summary: Delete an account holder from a bank account
+      parameters:
+        - in: path
+          name: AccountId
+          schema:
+            type: integer
+          required: true
+        - in: path
+          name: AccountHolderId
+          schema:
+            type: integer
+          required: true
+      responses:
+        '204':
+          description: Account holder deleted successfully
+        '404':
+          description: Account holder or bank account not found
+        '500':
+          description: Internal server error
+components:
+  responses:
+    '400':
+      description: Invalid data provided
+      content:
+        application/json:
+          schema:
+            type: string
+            example:
+              error: >-
+                Invalid data provided
+    '401':
+      description: 'Invalid credentials'
+      content:
+        application/json:
+          schema:
+            type: string
+            example:
+              error: >-
+                Could not find a required Access Token in the request,
+                identified by HEADER Authorization
+    '403':
+      description: 'The credentials dont have the authorization to perform this operation'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: 'Forbidden'
+    404_no_body:
+      description: 'Not found'
+      content:
+        application/json:
+          schema:
+            type: string
+            example: {}
+    '500':
+      description: Server exception'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: 'Internal server Error'
+  parameters:
+    PersonId:
+      in: path
+      name: personId
+      schema:
+        type: string
+      required: true
+      example: PABC123
+    OrganizationId:
+      in: path
+      name: organizationId
+      schema:
+        type: string
+      required: true
+      example: PYZC877
+  schemas:
+    NewPerson:
+      type: object
+      properties:
+        firstName:
+          type: string
+          description: First name of the person
+          example: John
+        lastName:
+          type: string
+          description: Last name of the person
+          example: Doe
+        dateOfBirth:
+          type: string
+          format: date
+          description: Date of birth of the person
+          example: 1980-01-01
+    Person:
+      allOf:
+        - $ref: '#/components/schemas/Person'
+        - type: object
+          properties:
+            personId:
+              description: A unique and immutable identifier used to identify the person resource.
+              type: string
+              example: PABC123
+    Organization:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name of the organization
+          example: Acme Corporation
+        registrationNumber:
+          type: string
+          description: Registration number of the organization
+          example: 123456789
+    NewOrganization:
+      allOf:
+        - $ref: '#/components/schemas/Organization'
+        - type: object
+          properties:
+            personId:
+              description: A unique and immutable identifier used to identify the organization resource.
+              type: string
+              example: PYZC877
+    BankAccount:
+      type: object
+      properties:
+        accountNumber:
+          type: string
+          description: Account number of the bank account
+          format: uuid
+          example: b67e71ff-3dab-4b60-8452-078775f3d783
+        accountType:
+          type: string
+          description: Type of bank account (e.g., Checking, Savings)
+          enum:
+            - CHECKING
+            - SAVINGS
+          example: CHECKING
+        balance:
+          type: number
+          format: float
+          description: Balance of the bank account
+          example: 1000.00
+    AccountHolder:
+      type: object
+      properties:
+        accountId:
+          type: string
+          description: ID of the bank account
+          example: b67e71ff-3dab-4b60-8452-078775f3d783
+        personId:
+          type: string
+          description: ID of the person
+          example: PABC123
+        organizationId:
+          type: string
+          description: ID of the organization
+          example: PYZC877
+        role:
+          type: string
+          description: Role of the account holder (e.g., Principal, Manager, Beneficiary)
+          enum:
+            - PRINCIPAL
+            - MANAGER
+            - BENEFICIARY
+          example: PRINCIPAL
+        effectiveDate:
+          type: string
+          format: date
+          description: Effective date of the account holder's role
+          example: 2023-04-01
+    Error:
+      type: object
+      properties:
+        error: 
+          type: string
+  securitySchemes:
+    OAuth2:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: https://sandbox-fake.openbanking.com/oauth/token
+          scopes:
+            read_banking: allows reading the banking generic resources
+            read_banking_persons: allows reading banking persons resource
+            write_banking_persons: allows write banking persons resource
+            read_banking_organiations: allows reading banking organiations resource
+            write_banking_organiations: allows write banking organiations resource
+            read_banking_accounts: allows read banking accounts resource
+            write_banking_accounts: allows write banking accounts resource
