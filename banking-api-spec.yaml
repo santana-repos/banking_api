@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Banking System API
-  version: 2.1.1
+  version: 2.2.3
   description: API for managing banking accounts, persons and organizations.
   contact:
     email: info@banking.com
@@ -130,7 +130,7 @@ paths:
           - write_banking_organiations
       summary: Create a new organization
       tags:
-      - operations
+      - organizations
       requestBody:
         content:
           application/json:
@@ -158,7 +158,7 @@ paths:
           - read_banking_organiations
       summary: Get a specific organization
       tags:
-      - operations
+      - organizations
       parameters:
         - $ref: '#/components/parameters/OrganizationId'
       responses:
@@ -179,7 +179,7 @@ paths:
           - write_banking_organiations
       summary: Update an organization
       tags:
-      - operations
+      - organizations
       parameters:
         - $ref: '#/components/parameters/OrganizationId'
       requestBody:
@@ -207,7 +207,7 @@ paths:
           - write_banking_organiations
       summary: Delete an organization
       tags:
-      - operations
+      - organizations
       parameters:
         - $ref: '#/components/parameters/OrganizationId'
       responses:
@@ -346,6 +346,8 @@ paths:
         - OAuth2:
           - read_banking_accounts
       summary: Get all account holders of a bank account
+      tags:
+      - bank-accounts
       parameters:
         - $ref:  '#/components/parameters/AccountId'
       responses:
@@ -390,6 +392,8 @@ paths:
         - OAuth2:
           - write_banking_accounts
       summary: Update an account holder of a bank account
+      tags:
+      - bank-accounts
       parameters:
         - $ref:  '#/components/parameters/AccountId'
         - $ref:  '#/components/parameters/AccountHolderId'
@@ -417,6 +421,8 @@ paths:
         - OAuth2:
           - write_banking_accounts
       summary: Delete an account holder from a bank account
+      tags:
+      - bank-accounts
       parameters:
         - $ref:  '#/components/parameters/AccountId'
         - $ref:  '#/components/parameters/AccountHolderId'
@@ -501,22 +507,31 @@ components:
         type: string
         example: de6b5e4d-db8f-416f-bb3d-b3bb4a8758cd
   schemas:
-    NewPerson:
+    Party:
       type: object
       properties:
-        firstName:
+        partyId:
           type: string
-          description: First name of the person
-          example: John
-        lastName:
-          type: string
-          description: Last name of the person
-          example: Doe
-        dateOfBirth:
-          type: string
-          format: date
-          description: Date of birth of the person
-          example: 1980-01-01
+          format: uuid
+          example: 47a20287-0328-41d6-8a4e-420d2b638de7
+    NewPerson:
+      allOf:
+        - type: object
+          properties:
+            firstName:
+              type: string
+              description: First name of the person
+              example: John
+            lastName:
+              type: string
+              description: Last name of the person
+              example: Doe
+            dateOfBirth:
+              type: string
+              format: date
+              description: Date of birth of the person
+              example: 1980-01-01
+        - $ref:  '#/components/schemas/Party'
     Person:
       allOf:
         - type: object
@@ -527,16 +542,18 @@ components:
               example: PABC123
         - $ref: '#/components/schemas/NewPerson'              
     NewOrganization:
-      type: object
-      properties:
-        name:
-          type: string
-          description: Name of the organization
-          example: Acme Corporation
-        registrationNumber:
-          type: string
-          description: Registration number of the organization
-          example: 123456789
+      allOf:
+        - type: object
+          properties:
+            name:
+              type: string
+              description: Name of the organization
+              example: Acme Corporation
+            registrationNumber:
+              type: string
+              description: Registration number of the organization
+              example: 123456789
+        - $ref:   '#/components/schemas/Party'
     Organization:  
       allOf:
         - type: object
@@ -573,14 +590,32 @@ components:
           type: string
           description: ID of the bank account
           example: b67e71ff-3dab-4b60-8452-078775f3d783
-        personId:
-          type: string
-          description: ID of the person
-          example: PABC123
-        organizationId:
-          type: string
-          description: ID of the organization
-          example: PYZC877
+        account-holders:
+          type: array
+          items:
+            type: object
+            properties:
+              partyId:
+                type: string
+                description: Party ID (e.g. person or organization)
+                format: uuid
+                example: 47a20287-0328-41d6-8a4e-420d2b638de7
+              roles:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AccountRole'
+    AccountHolder:
+      allOf:
+      - type: object
+        properties:
+          accountHolderId:
+            type: string
+            description: account holder ID
+            example: de6b5e4d-db8f-416f-bb3d-b3bb4a8758cd
+      - $ref: '#/components/schemas/NewAccountHolder'
+    AccountRole:
+      type: object
+      properties:
         role:
           type: string
           description: Role of the account holder (e.g., Principal, Manager, Beneficiary)
@@ -594,15 +629,6 @@ components:
           format: date
           description: Effective date of the account holder's role
           example: 2023-04-01
-    AccountHolder:
-      allOf:
-      - type: object
-        properties:
-          accountHolderId:
-            type: string
-            description: account holder ID
-            example: de6b5e4d-db8f-416f-bb3d-b3bb4a8758cd
-      - $ref: '#/components/schemas/NewAccountHolder'
     Error:
       type: object
       properties:
